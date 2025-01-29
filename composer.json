@@ -1,0 +1,21 @@
+{
+    "name": "ostap-mykhaylyak/nube",
+    "description": "A PHP client for the Incus API",
+    "type": "library",
+    "require": {
+        "php": ">=8.2",
+        "ext-curl": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "IncusApi\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ostap Mykhaylyak",
+            "email": "me@ostap.dev"
+        }
+    ],
+    "license": "MIT"
+}
