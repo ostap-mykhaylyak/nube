@@ -7,6 +7,9 @@ composer config repositories.gate vcs https://github.com/ostap-mykhaylyak/nube
 ```bash
 composer require ostap-mykhaylyak/nube:dev-main
 ```
+```bash
+lxc config trust add
+```
 
 ```php
 use Ostap\Nube\Client;
