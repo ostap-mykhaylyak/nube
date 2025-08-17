@@ -1,5 +1,3 @@
-# nube
-
 ## 📦 Installation
 
 Install the module via Composer:
