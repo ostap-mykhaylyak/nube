@@ -39,6 +39,60 @@ print_r($client->request('GET', '/1.0/containers'));
 <?php
 
 use Ostap\Nube\Client;
+use Ostap\Nube\Endpoint\Container;
+
+require __DIR__ . '/vendor/autoload.php';
+
+// Inizializzazione del client LXD
+$client = new Client('https://127.0.0.1:8443', [], [
+    'cert' => __DIR__ . '/client.crt',
+    'key'  => __DIR__ . '/client.key'
+]);
+
+$containerApi = new Container($client);
+
+// Configurazione cloud-init
+$cloudInitUserData = <<<CLOUDINIT
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - software-properties-common
+runcmd:
+  - add-apt-repository -y ppa:nginx/stable
+  - apt-get update
+  - apt-get install -y nginx
+  - systemctl enable nginx
+  - systemctl start nginx
+CLOUDINIT;
+
+// Configurazione del container
+$containerConfig = [
+    "name" => "web01",
+    "source" => [
+        "type" => "image",
+        "mode" => "pull",
+        "server" => "https://cloud-images.ubuntu.com/releases",
+        "protocol" => "simplestreams",
+        "alias" => "24.04" // Ubuntu 24.04 Noble
+    ],
+    "config" => [
+        "cloud-init.user-data" => $cloudInitUserData
+    ],
+    "profiles" => ["default"],
+    "description" => "Container Ubuntu 24.04 con NGINX da PPA",
+    "ephemeral" => false
+];
+
+// Creazione del container
+$response = $containerApi->create($containerConfig);
+print_r($response);
+```
+
+```php
+<?php
+
+use Ostap\Nube\Client;
 use Ostap\Nube\Endpoint\Forward;
 use Ostap\Nube\Helper\ForwardBuilder;
 
