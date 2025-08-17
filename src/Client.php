@@ -41,6 +41,7 @@ class Client
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->headers);
 
+        // Se configurati, usa certificati client
         if ($this->certFile && $this->keyFile) {
             curl_setopt($ch, CURLOPT_SSLCERT, $this->certFile);
             curl_setopt($ch, CURLOPT_SSLKEY, $this->keyFile);
@@ -68,24 +69,30 @@ class Client
         ];
     }
 
-    public function registerCertificateWithToken(
-        string $token,
+    /**
+     * Registra un certificato client nel trust store di LXD usando un trust_token
+     */
+    public function registerCertificateWithTrustToken(
+        string $trustToken,
         string $certFile,
         string $keyFile,
-        string $name = 'php-client'
+        string $name = 'php-client',
+        array $projects = ['default'],
+        bool $restricted = false
     ): array {
+        // Genera certificato self-signed
         $certData = Certificate::generate($certFile, $keyFile, $name);
 
-        $headersWithToken = array_merge($this->headers, [
-            "Authorization: Macaroon {$token}"
-        ]);
-
-        $tmpClient = new self($this->baseUrl, $headersWithToken);
-
-        return $tmpClient->request('POST', '/1.0/certificates', [
+        // Corpo richiesta come da specifica LXD
+        $body = [
             'type'        => 'client',
             'certificate' => base64_encode($certData['cert']),
-            'name'        => $name
-        ]);
+            'name'        => $name,
+            'projects'    => $projects,
+            'restricted'  => $restricted,
+            'trust_token' => $trustToken
+        ];
+
+        return $this->request('POST', '/1.0/certificates', $body);
     }
 }
