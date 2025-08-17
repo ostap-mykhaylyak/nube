@@ -13,12 +13,22 @@ lxc config trust add
 
 ```php
 use Ostap\Nube\Client;
-use Ostap\Nube\Endpoint\Container;
 
-$client = new Client('https://127.0.0.1:8443', [
-    'Authorization: Bearer YOUR_LXD_TOKEN'
+$client = new Client('https://127.0.0.1:8443');
+
+$response = $client->registerCertificateWithToken(
+    $token,
+    __DIR__.'/client.crt',
+    __DIR__.'/client.key',
+    'php-client'
+);
+
+print_r($response);
+
+$client = new Client('https://127.0.0.1:8443', [], [
+    'cert' => __DIR__.'/client.crt',
+    'key'  => __DIR__.'/client.key',
 ]);
 
-$containerApi = new Container($client);
-print_r($containerApi->list());
+print_r($client->request('GET', '/1.0/containers'));
 ```
