@@ -13,7 +13,7 @@ composer require ostap-mykhaylyak/nube:dev-main
 use Ostap\Nube\Client;
 
 // $ lxc config trust add → trust_token
-$trustToken = "ABC123...";
+$trust_token = "ABC123...";
 
 $client = new Client('https://127.0.0.1:8443');
 
