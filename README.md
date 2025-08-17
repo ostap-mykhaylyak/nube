@@ -44,19 +44,34 @@ $client = new Client('https://127.0.0.1:8443', [], [
 
 $forwardApi = new Forward($client);
 
+// Configurazione del forward multi-porta
 $newForward = [
     "config" => [
         "target_address" => "10.101.55.23"   // IP del container
     ],
-    "description" => "Forward HTTP per il container web01",
+    "description" => "Forward HTTP/HTTPS per container web01",
     "listen_address" => "203.0.113.45",      // IP pubblico del server
     "ports" => [
         [
-            "description" => "HTTP pubblicato su IP pubblico",
-            "listen_port" => "80",           // Porta esterna
+            "description" => "HTTP pubblicato",
+            "listen_port" => "80",
             "protocol" => "tcp",
-            "target_address" => "10.101.55.23", // IP interno del container
-            "target_port" => "80"            // Porta interna del container
+            "target_address" => "10.101.55.23",
+            "target_port" => "80"
+        ],
+        [
+            "description" => "HTTPS pubblicato TCP",
+            "listen_port" => "443",
+            "protocol" => "tcp",
+            "target_address" => "10.101.55.23",
+            "target_port" => "443"
+        ],
+        [
+            "description" => "HTTPS pubblicato UDP",
+            "listen_port" => "443",
+            "protocol" => "udp",
+            "target_address" => "10.101.55.23",
+            "target_port" => "443"
         ]
     ]
 ];
