@@ -9,6 +9,8 @@ composer require ostap-mykhaylyak/nube:dev-main
 ```
 
 ```php
+<?php
+
 use Ostap\Nube\Client;
 
 // $ lxc config trust add → trust_token
@@ -34,32 +36,47 @@ print_r($client->request('GET', '/1.0/containers'));
 ```
 
 ```php
+<?php
+
 use Ostap\Nube\Client;
 use Ostap\Nube\Endpoint\Forward;
 use Ostap\Nube\Helper\ForwardBuilder;
 
-$client = new Client('https://[::1]:8443', [], [ // IPv6 localhost per esempio
+require __DIR__ . '/vendor/autoload.php';
+
+// Connessione al daemon LXD
+$client = new Client('https://127.0.0.1:8443', [], [
     'cert' => __DIR__.'/client.crt',
     'key'  => __DIR__.'/client.key'
 ]);
 
 $forwardApi = new Forward($client);
 
-// Forward builder: esponiamo HTTP/HTTPS (TCP e UDP) su IPv6 pubblico
-$builder = new ForwardBuilder(
-    "[2001:db8::1234]",   // IP pubblico IPv6 del server
-    "fd42:1234:5678:1::2", // IP IPv6 del container LXD
-    "Forward IPv6 HTTP/HTTPS per container web01"
-);
+// === Forward IPv4 ===
+$forwardIPv4 = (new ForwardBuilder(
+    "203.0.113.45",       // IP pubblico IPv4 del server
+    "10.101.55.23",       // IP interno del container (LXD IPv4)
+    "Forward IPv4 HTTP/HTTPS per container web01"
+))
+    ->addPort(80,  "tcp", 80, "HTTP IPv4")
+    ->addPort(443, "tcp", 443, "HTTPS IPv4 TCP")
+    ->addPort(443, "udp", 443, "HTTPS IPv4 UDP")
+    ->build();
 
-$builder
+$responseV4 = $forwardApi->create("lxdbr0", $forwardIPv4);
+print_r($responseV4);
+
+// === Forward IPv6 ===
+$forwardIPv6 = (new ForwardBuilder(
+    "[2001:db8::1234]",     // IP pubblico IPv6 del server
+    "fd42:1234:5678:1::2",  // IP interno del container (LXD IPv6)
+    "Forward IPv6 HTTP/HTTPS per container web01"
+))
     ->addPort(80,  "tcp", 80, "HTTP IPv6")
     ->addPort(443, "tcp", 443, "HTTPS IPv6 TCP")
-    ->addPort(443, "udp", 443, "HTTPS IPv6 UDP");
+    ->addPort(443, "udp", 443, "HTTPS IPv6 UDP")
+    ->build();
 
-$newForward = $builder->build();
-
-$response = $forwardApi->create("lxdbr0", $newForward);
-print_r($response);
-
+$responseV6 = $forwardApi->create("lxdbr0", $forwardIPv6);
+print_r($responseV6);
 ```
