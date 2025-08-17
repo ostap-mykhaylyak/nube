@@ -5,14 +5,21 @@ class Client
 {
     protected string $baseUrl;
     protected array $headers;
+    protected ?string $certFile = null;
+    protected ?string $keyFile = null;
+    protected ?string $caFile = null;
 
-    public function __construct(string $baseUrl, array $headers = [])
+    public function __construct(string $baseUrl, array $headers = [], array $options = [])
     {
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->headers = array_merge([
             'Accept: application/json',
             'Content-Type: application/json'
         ], $headers);
+
+        $this->certFile = $options['cert'] ?? null;
+        $this->keyFile  = $options['key'] ?? null;
+        $this->caFile   = $options['ca'] ?? null;
     }
 
     public function request(string $method, string $endpoint, array $data = []): array
@@ -34,6 +41,18 @@ class Client
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->headers);
 
+        if ($this->certFile && $this->keyFile) {
+            curl_setopt($ch, CURLOPT_SSLCERT, $this->certFile);
+            curl_setopt($ch, CURLOPT_SSLKEY, $this->keyFile);
+        }
+
+        if ($this->caFile) {
+            curl_setopt($ch, CURLOPT_CAINFO, $this->caFile);
+        } else {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        }
+
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -45,7 +64,28 @@ class Client
 
         return [
             'status' => $httpCode,
-            'body' => json_decode($response, true)
+            'body'   => json_decode($response, true)
         ];
+    }
+
+    public function registerCertificateWithToken(
+        string $token,
+        string $certFile,
+        string $keyFile,
+        string $name = 'php-client'
+    ): array {
+        $certData = Certificate::generate($certFile, $keyFile, $name);
+
+        $headersWithToken = array_merge($this->headers, [
+            "Authorization: Macaroon {$token}"
+        ]);
+
+        $tmpClient = new self($this->baseUrl, $headersWithToken);
+
+        return $tmpClient->request('POST', '/1.0/certificates', [
+            'type'        => 'client',
+            'certificate' => base64_encode($certData['cert']),
+            'name'        => $name
+        ]);
     }
 }
