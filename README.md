@@ -8,7 +8,6 @@ composer config repositories.gate vcs https://github.com/ostap-mykhaylyak/nube
 composer require ostap-mykhaylyak/nube:dev-main
 ```
 
-
 ```php
 use Ostap\Nube\Client;
 
@@ -33,6 +32,7 @@ $client = new Client('https://127.0.0.1:8443', [], [
 
 print_r($client->request('GET', '/1.0/containers'));
 ```
+
 ```php
 use Ostap\Nube\Client;
 use Ostap\Nube\Endpoint\Forward;
@@ -44,21 +44,19 @@ $client = new Client('https://127.0.0.1:8443', [], [
 
 $forwardApi = new Forward($client);
 
-// struttura forward come da API LXD
 $newForward = [
     "config" => [
-        "target_address" => "198.51.100.99",
-        "user.mykey" => "foo"
+        "target_address" => "10.101.55.23"   // IP del container
     ],
-    "description" => "My public IP forward",
-    "listen_address" => "192.0.2.1",
+    "description" => "Forward HTTP per il container web01",
+    "listen_address" => "203.0.113.45",      // IP pubblico del server
     "ports" => [
         [
-            "description" => "My web server forward",
-            "listen_port" => "80,81,8080-8090",
+            "description" => "HTTP pubblicato su IP pubblico",
+            "listen_port" => "80",           // Porta esterna
             "protocol" => "tcp",
-            "target_address" => "198.51.100.2",
-            "target_port" => "80,81,8080-8090"
+            "target_address" => "10.101.55.23", // IP interno del container
+            "target_port" => "80"            // Porta interna del container
         ]
     ]
 ];
