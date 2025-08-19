@@ -159,3 +159,9 @@ $forwardIPv6 = (new ForwardBuilder(
 $responseV6 = $forward->create("lxdbr0", $forwardIPv6);
 print_r($responseV6);
 ```
+
+
+```bash
+lxc config trust list-tokens
+lxc config trust list
+```
