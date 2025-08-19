@@ -41,9 +41,6 @@ use Ostap\Nube\Client;
 
 require __DIR__ . '/vendor/autoload.php';
 
-// $ lxc config trust add → trust_token
-$trust_token = "xxx";
-
 $client = new Client('https://5.59.249.222:8443', [], [
     'cert' => __DIR__.'/client.crt',
     'key'  => __DIR__.'/client.key'
@@ -52,7 +49,7 @@ $client = new Client('https://5.59.249.222:8443', [], [
 $body = [
     'type'        => 'client',
     'name'        => 'php-client',
-    'trust_token' => $trust_token
+    'trust_token' => 'trust_token' // $ lxc config trust add → trust_token
 ];
 
 echo '<pre>';
