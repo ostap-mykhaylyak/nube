@@ -7,6 +7,17 @@ composer config repositories.nube vcs https://github.com/ostap-mykhaylyak/nube
 ```bash
 composer require ostap-mykhaylyak/nube:dev-main
 ```
+```php
+<?php
+
+use Ostap\Nube\Certificate;
+
+require __DIR__ . '/vendor/autoload.php';
+
+$certificate = new Certificate()->generate(__DIR__ . '/client.crt', __DIR__ . '/client.key', 'php-client');
+
+print_r($certificate);
+```
 
 ```php
 <?php
@@ -14,10 +25,6 @@ composer require ostap-mykhaylyak/nube:dev-main
 use Ostap\Nube\Client;
 
 require __DIR__ . '/vendor/autoload.php';
-
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
 
 // $ lxc config trust add → trust_token
 $trust_token = "xxx";
@@ -28,27 +35,23 @@ $client = new Client('https://5.59.249.222:8443', [], [
 ]);
 
 $body = [
-            'type'        => 'client',
-            'name'        => 'php-client',
-            'trust_token' => $trust_token
-        ];
+    'type'        => 'client',
+    'name'        => 'php-client',
+    'trust_token' => $trust_token
+];
 
 echo '<pre>';
 var_dump($client->request('POST', '/1.0/certificates', $body));
 echo '</pre>';
 
-echo '<pre>';
-//print_r($response);
-echo '</pre>';
+print_r($response);
 
 $client = new Client('https://5.59.249.222:8443', [], [
     'cert' => __DIR__.'/client.crt',
     'key'  => __DIR__.'/client.key'
 ]);
 
-echo '<pre>';
 print_r($client->request('GET', '/1.0/containers'));
-echo '</pre>';
 ```
 
 ```php
@@ -59,16 +62,14 @@ use Ostap\Nube\Endpoint\Container;
 
 require __DIR__ . '/vendor/autoload.php';
 
-// Inizializzazione del client LXD
 $client = new Client('https://127.0.0.1:8443', [], [
     'cert' => __DIR__ . '/client.crt',
     'key'  => __DIR__ . '/client.key'
 ]);
 
-$containerApi = new Container($client);
+$container = new Container($client);
 
-// Configurazione cloud-init
-$cloudInitUserData = <<<CLOUDINIT
+$cloud_init = <<<CLOUDINIT
 #cloud-config
 package_update: true
 package_upgrade: true
@@ -82,29 +83,26 @@ runcmd:
   - systemctl start nginx
 CLOUDINIT;
 
-// Configurazione del container
-$containerConfig = [
+$config = [
     "name" => "web01",
     "source" => [
         "type" => "image",
         "mode" => "pull",
         "server" => "https://cloud-images.ubuntu.com/releases",
         "protocol" => "simplestreams",
-        "alias" => "24.04" // Ubuntu 24.04 Noble
+        "alias" => "24.04"
     ],
     "config" => [
-        "cloud-init.user-data" => $cloudInitUserData
+        "cloud-init.user-data" => $cloud_init
     ],
     "profiles" => ["default"],
-    "description" => "Container Ubuntu 24.04 con NGINX da PPA",
+    "description" => "Ubuntu 24.04 with NGINX",
     "ephemeral" => false
 ];
 
-// Creazione del container
-$response = $containerApi->create($containerConfig);
+$response = $container->create($config);
 print_r($response);
 ```
-
 ```php
 <?php
 
@@ -114,13 +112,12 @@ use Ostap\Nube\Helper\ForwardBuilder;
 
 require __DIR__ . '/vendor/autoload.php';
 
-// Connessione al daemon LXD
 $client = new Client('https://127.0.0.1:8443', [], [
     'cert' => __DIR__.'/client.crt',
     'key'  => __DIR__.'/client.key'
 ]);
 
-$forwardApi = new Forward($client);
+$forward = new Forward($client);
 
 // === Forward IPv4 ===
 $forwardIPv4 = (new ForwardBuilder(
@@ -133,7 +130,7 @@ $forwardIPv4 = (new ForwardBuilder(
     ->addPort(443, "udp", 443, "HTTPS IPv4 UDP")
     ->build();
 
-$responseV4 = $forwardApi->create("lxdbr0", $forwardIPv4);
+$responseV4 = $forward->create("lxdbr0", $forwardIPv4);
 print_r($responseV4);
 
 // === Forward IPv6 ===
@@ -147,6 +144,6 @@ $forwardIPv6 = (new ForwardBuilder(
     ->addPort(443, "udp", 443, "HTTPS IPv6 UDP")
     ->build();
 
-$responseV6 = $forwardApi->create("lxdbr0", $forwardIPv6);
+$responseV6 = $forward->create("lxdbr0", $forwardIPv6);
 print_r($responseV6);
 ```
