@@ -2,7 +2,7 @@
 
 Install the module via Composer:
 ```bash
-composer config repositories.gate vcs https://github.com/ostap-mykhaylyak/nube
+composer config repositories.nube vcs https://github.com/ostap-mykhaylyak/nube
 ```
 ```bash
 composer require ostap-mykhaylyak/nube:dev-main
