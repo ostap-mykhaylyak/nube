@@ -1,5 +1,5 @@
 {
-    "name": "ostap/nube",
+    "name": "ostap-mykhaylyak/nube",
     "description": "LXD",
     "type": "library",
     "require": {
