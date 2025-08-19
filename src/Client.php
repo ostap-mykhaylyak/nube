@@ -67,26 +67,4 @@ class Client
             'body'   => json_decode($response, true)
         ];
     }
-
-    public function registerCertificateWithTrustToken(
-        string $trustToken,
-        string $certFile,
-        string $keyFile,
-        string $name = 'php-client',
-        array $projects = ['default'],
-        bool $restricted = false
-    ): array {
-        $certData = Certificate::generate($certFile, $keyFile, $name);
-
-        $body = [
-            'type'        => 'client',
-            'certificate' => base64_encode($certData['cert']),
-            'name'        => $name,
-            'projects'    => $projects,
-            'restricted'  => $restricted,
-            'trust_token' => $trustToken
-        ];
-
-        return $this->request('POST', '/1.0/certificates', $body);
-    }
 }
