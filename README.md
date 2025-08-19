@@ -13,26 +13,42 @@ composer require ostap-mykhaylyak/nube:dev-main
 
 use Ostap\Nube\Client;
 
+require __DIR__ . '/vendor/autoload.php';
+
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
 // $ lxc config trust add → trust_token
-$trust_token = "ABC123...";
+$trust_token = "xxx";
 
-$client = new Client('https://127.0.0.1:8443');
-
-$response = $client->registerCertificateWithTrustToken(
-    $trust_token,
-    __DIR__.'/client.crt',
-    __DIR__.'/client.key',
-    'php-client'
-);
-
-print_r($response);
-
-$client = new Client('https://127.0.0.1:8443', [], [
+$client = new Client('https://5.59.249.222:8443', [], [
     'cert' => __DIR__.'/client.crt',
     'key'  => __DIR__.'/client.key'
 ]);
 
+$body = [
+            'type'        => 'client',
+            'name'        => 'php-client',
+            'trust_token' => $trust_token
+        ];
+
+echo '<pre>';
+var_dump($client->request('POST', '/1.0/certificates', $body));
+echo '</pre>';
+
+echo '<pre>';
+//print_r($response);
+echo '</pre>';
+
+$client = new Client('https://5.59.249.222:8443', [], [
+    'cert' => __DIR__.'/client.crt',
+    'key'  => __DIR__.'/client.key'
+]);
+
+echo '<pre>';
 print_r($client->request('GET', '/1.0/containers'));
+echo '</pre>';
 ```
 
 ```php
