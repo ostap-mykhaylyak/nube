@@ -41,7 +41,7 @@ use Ostap\Nube\Client;
 
 require __DIR__ . '/vendor/autoload.php';
 
-$client = new Client('https://5.59.249.222:8443', [], [
+$client = new Client('https://127.0.0.1:8443', [], [
     'cert' => __DIR__.'/client.crt',
     'key'  => __DIR__.'/client.key'
 ]);
@@ -58,7 +58,7 @@ echo '</pre>';
 
 print_r($response);
 
-$client = new Client('https://5.59.249.222:8443', [], [
+$client = new Client('https://127.0.0.1:8443', [], [
     'cert' => __DIR__.'/client.crt',
     'key'  => __DIR__.'/client.key'
 ]);
