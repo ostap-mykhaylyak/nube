@@ -6,10 +6,6 @@ class Certificate
     public static function generate(string $certPath, string $keyPath, string $cn = 'php-client'): array
     {
         $dn = [
-            "countryName" => "IT",
-            "stateOrProvinceName" => "Italy",
-            "localityName" => "City",
-            "organizationName" => "OstapNube",
             "commonName" => $cn,
         ];
 
