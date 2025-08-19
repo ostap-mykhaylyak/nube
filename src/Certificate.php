@@ -24,7 +24,6 @@ class Certificate
         openssl_x509_export_to_file($cert, $certPath);
         openssl_pkey_export_to_file($privKey, $keyPath);
 
-        // restituisce cert e chiave in formato stringa per invio a LXD
         openssl_x509_export($cert, $certOut);
         openssl_pkey_export($privKey, $keyOut);
 
