@@ -162,6 +162,6 @@ print_r($responseV6);
 
 
 ```bash
-lxc config trust list-tokens
-lxc config trust list
+$ lxc config trust list-tokens # List trusted clients
+$ lxc config trust list # List all active certificate add tokens
 ```
