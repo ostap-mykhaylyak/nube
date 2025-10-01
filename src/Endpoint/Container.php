@@ -35,6 +35,6 @@ class Container
 
     public function state(string $name): array
     {
-        return $this->client->request('GET', "/1.0/containers/{$name}");
+        return $this->client->request('GET', "/1.0/containers/{$name}/state");
     }
 }
