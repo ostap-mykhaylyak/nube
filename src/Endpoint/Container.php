@@ -17,6 +17,11 @@ class Container
         return $this->client->request('GET', '/1.0/containers');
     }
 
+    public function get(string $name): array
+    {
+        return $this->client->request('GET', "/1.0/containers/{$name}");
+    }
+
     public function create(string $name, array $config = []): array
     {
         $data = array_merge(['name' => $name], $config);
