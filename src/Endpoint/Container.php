@@ -32,4 +32,9 @@ class Container
     {
         return $this->client->request('DELETE', "/1.0/containers/{$name}");
     }
+
+    public function state(string $name): array
+    {
+        return $this->client->request('GET', "/1.0/containers/{$name}");
+    }
 }
