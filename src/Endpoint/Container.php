@@ -79,20 +79,22 @@ class Container
 
     protected function extractOperationId(array $response): string
     {
+        // Il client potrebbe wrappare la risposta in un array con 'body'
+        $data = $response['body'] ?? $response;
+        
         // Prova diversi formati di risposta
-        if (isset($response['operation'])) {
-            return trim($response['operation'], '/');
+        if (isset($data['operation'])) {
+            return trim($data['operation'], '/');
         }
         
-        if (isset($response['metadata']['id'])) {
-            return $response['metadata']['id'];
+        if (isset($data['metadata']['id'])) {
+            return $data['metadata']['id'];
         }
         
-        if (isset($response['id'])) {
-            return $response['id'];
+        if (isset($data['id'])) {
+            return $data['id'];
         }
         
-        // Debug: mostra la struttura della risposta
         throw new \RuntimeException('Operation ID non trovato nella risposta. Risposta ricevuta: ' . json_encode($response));
     }
 
