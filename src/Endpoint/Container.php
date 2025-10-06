@@ -79,10 +79,21 @@ class Container
 
     protected function extractOperationId(array $response): string
     {
+        // Prova diversi formati di risposta
         if (isset($response['operation'])) {
             return trim($response['operation'], '/');
         }
-        throw new \RuntimeException('Operation ID non trovato nella risposta');
+        
+        if (isset($response['metadata']['id'])) {
+            return $response['metadata']['id'];
+        }
+        
+        if (isset($response['id'])) {
+            return $response['id'];
+        }
+        
+        // Debug: mostra la struttura della risposta
+        throw new \RuntimeException('Operation ID non trovato nella risposta. Risposta ricevuta: ' . json_encode($response));
     }
 
     protected function waitForOperation(string $operationId, int $timeout = 300): void
