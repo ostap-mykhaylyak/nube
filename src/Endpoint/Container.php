@@ -38,8 +38,17 @@ class Container
         return $this->client->request('GET', "/1.0/containers/{$name}/state");
     }
 
+    /**
+     * Esegue un comando nel container e attende il completamento
+     * 
+     * @param string $name Nome del container
+     * @param array $command Comando da eseguire (array di stringhe)
+     * @param array $options Opzioni aggiuntive (environment, user, group, cwd, etc.)
+     * @return array Risultato dell'esecuzione con stdout, stderr e return code
+     */
     public function exec(string $name, array $command, array $options = []): array
     {
+        // Prepara i parametri per l'esecuzione
         $execData = [
             'command' => $command,
             'wait-for-websocket' => false,
@@ -47,6 +56,7 @@ class Container
             'interactive' => false,
         ];
 
+        // Aggiungi opzioni se presenti
         if (isset($options['environment'])) {
             $execData['environment'] = $options['environment'];
         }
@@ -60,15 +70,31 @@ class Container
             $execData['cwd'] = $options['cwd'];
         }
 
+        // Avvia l'esecuzione del comando
         $response = $this->client->request('POST', "/1.0/containers/{$name}/exec", $execData);
+        
+        // Debug della risposta iniziale
+        if (!isset($response['body']) && !isset($response['operation']) && !isset($response['metadata'])) {
+            throw new \RuntimeException('Struttura risposta exec non valida. Risposta ricevuta: ' . json_encode($response));
+        }
 
+        // Ottieni l'operation ID
         $operationId = $this->extractOperationId($response);
 
+        // Attendi il completamento dell'operazione
         $this->waitForOperation($operationId);
 
+        // Recupera l'output
         return $this->getOperationOutput($operationId);
     }
 
+    /**
+     * Esegue un comando semplice e ritorna solo lo stdout
+     * 
+     * @param string $name Nome del container
+     * @param string|array $command Comando da eseguire
+     * @return string Output del comando
+     */
     public function execSimple(string $name, $command): string
     {
         $commandArray = is_array($command) ? $command : ['/bin/sh', '-c', $command];
@@ -77,6 +103,9 @@ class Container
         return $result['output']['stdout'] ?? '';
     }
 
+    /**
+     * Estrae l'ID dell'operazione dalla risposta
+     */
     protected function extractOperationId(array $response): string
     {
         // Il client potrebbe wrappare la risposta in un array con 'body'
@@ -98,12 +127,22 @@ class Container
         throw new \RuntimeException('Operation ID non trovato nella risposta. Risposta ricevuta: ' . json_encode($response));
     }
 
+    /**
+     * Attende il completamento di un'operazione
+     */
     protected function waitForOperation(string $operationId, int $timeout = 300): void
     {
         $start = time();
         
         while (true) {
-            $operation = $this->client->request('GET', "/{$operationId}");
+            $response = $this->client->request('GET', "/{$operationId}");
+            
+            // Debug
+            if (!isset($response['body']) && !isset($response['metadata'])) {
+                throw new \RuntimeException('Struttura risposta non valida in waitForOperation. Risposta ricevuta: ' . json_encode($response));
+            }
+            
+            $operation = $response['body'] ?? $response;
             
             $status = $operation['metadata']['status'] ?? 'Unknown';
             
@@ -119,9 +158,19 @@ class Container
         }
     }
 
+    /**
+     * Recupera l'output di un'operazione completata
+     */
     protected function getOperationOutput(string $operationId): array
     {
-        $operation = $this->client->request('GET', "/{$operationId}");
+        $response = $this->client->request('GET', "/{$operationId}");
+        
+        // Debug
+        if (!isset($response['body']) && !isset($response['metadata'])) {
+            throw new \RuntimeException('Struttura risposta non valida in getOperationOutput. Risposta ricevuta: ' . json_encode($response));
+        }
+        
+        $operation = $response['body'] ?? $response;
         
         $metadata = $operation['metadata'] ?? [];
         $status = $metadata['status'] ?? 'Unknown';
@@ -135,21 +184,41 @@ class Container
             ]
         ];
 
+        // Recupera stdout se disponibile
         if (isset($metadata['metadata']['output']['1'])) {
             try {
                 $stdoutPath = "/{$operationId}/logs/1";
-                $stdout = $this->client->request('GET', $stdoutPath);
+                $stdoutResponse = $this->client->request('GET', $stdoutPath);
+                
+                // Debug stdout
+                if (!is_string($stdoutResponse) && !isset($stdoutResponse['body'])) {
+                    throw new \RuntimeException('Struttura risposta stdout non valida. Risposta ricevuta: ' . json_encode($stdoutResponse));
+                }
+                
+                $stdout = $stdoutResponse['body'] ?? $stdoutResponse;
                 $result['output']['stdout'] = is_string($stdout) ? $stdout : '';
+            } catch (\RuntimeException $e) {
+                throw $e; // Rilancia le eccezioni di debug
             } catch (\Exception $e) {
                 // Stdout non disponibile
             }
         }
 
+        // Recupera stderr se disponibile
         if (isset($metadata['metadata']['output']['2'])) {
             try {
                 $stderrPath = "/{$operationId}/logs/2";
-                $stderr = $this->client->request('GET', $stderrPath);
+                $stderrResponse = $this->client->request('GET', $stderrPath);
+                
+                // Debug stderr
+                if (!is_string($stderrResponse) && !isset($stderrResponse['body'])) {
+                    throw new \RuntimeException('Struttura risposta stderr non valida. Risposta ricevuta: ' . json_encode($stderrResponse));
+                }
+                
+                $stderr = $stderrResponse['body'] ?? $stderrResponse;
                 $result['output']['stderr'] = is_string($stderr) ? $stderr : '';
+            } catch (\RuntimeException $e) {
+                throw $e; // Rilancia le eccezioni di debug
             } catch (\Exception $e) {
                 // Stderr non disponibile
             }
@@ -158,6 +227,9 @@ class Container
         return $result;
     }
 
+    /**
+     * Avvia il container
+     */
     public function start(string $name, int $timeout = 30): array
     {
         return $this->client->request('PUT', "/1.0/containers/{$name}/state", [
@@ -166,6 +238,9 @@ class Container
         ]);
     }
 
+    /**
+     * Ferma il container
+     */
     public function stop(string $name, bool $force = false, int $timeout = 30): array
     {
         return $this->client->request('PUT', "/1.0/containers/{$name}/state", [
@@ -175,6 +250,9 @@ class Container
         ]);
     }
 
+    /**
+     * Riavvia il container
+     */
     public function restart(string $name, bool $force = false, int $timeout = 30): array
     {
         return $this->client->request('PUT', "/1.0/containers/{$name}/state", [
