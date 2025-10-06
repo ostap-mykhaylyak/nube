@@ -160,6 +160,22 @@ $responseV6 = $forward->create("lxdbr0", $forwardIPv6);
 print_r($responseV6);
 ```
 
+```php
+// Esecuzione completa con tutte le informazioni
+$result = $container->exec('my-container', ['ls', '-la', '/home']);
+echo $result['output']['stdout'];
+echo $result['return_code'];
+
+// Esecuzione semplice
+$output = $container->execSimple('my-container', 'cat /etc/hostname');
+
+// Con opzioni personalizzate
+$result = $container->exec('my-container', ['whoami'], [
+    'user' => 1000,
+    'environment' => ['MYVAR' => 'value'],
+    'cwd' => '/tmp'
+]);
+```
 
 ```bash
 $ lxc config trust list-tokens # List trusted clients
