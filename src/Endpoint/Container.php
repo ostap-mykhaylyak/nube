@@ -165,9 +165,6 @@ class Container
     {
         $response = $this->client->request('GET', "/{$operationId}");
         
-        // Debug completo della risposta
-        log_message('error', "DEBUG getOperationOutput - Risposta completa: " . json_encode($response));
-        
         // Debug
         if (!isset($response['body']) && !isset($response['metadata'])) {
             throw new \RuntimeException('Struttura risposta non valida in getOperationOutput. Risposta ricevuta: ' . json_encode($response));
@@ -178,9 +175,6 @@ class Container
         $metadata = $operation['metadata'] ?? [];
         $status = $metadata['status'] ?? 'Unknown';
         
-        log_message('error', "DEBUG - Status: {$status}");
-        log_message('error', "DEBUG - Metadata completo: " . json_encode($metadata));
-        
         $result = [
             'status' => $status,
             'return_code' => $metadata['metadata']['return'] ?? -1,
@@ -190,17 +184,11 @@ class Container
             ]
         ];
 
-        log_message('error', "DEBUG - Return code: " . $result['return_code']);
-        log_message('error', "DEBUG - Output keys disponibili: " . json_encode(array_keys($metadata['metadata']['output'] ?? [])));
-
-        // Recupera stdout se disponibile
+        // Recupera stdout se disponibile - usa il path completo fornito da LXD
         if (isset($metadata['metadata']['output']['1'])) {
             try {
-                $stdoutPath = "/{$operationId}/logs/1";
-                log_message('error', "DEBUG - Tentativo di recupero stdout da: {$stdoutPath}");
+                $stdoutPath = $metadata['metadata']['output']['1'];
                 $stdoutResponse = $this->client->request('GET', $stdoutPath);
-                
-                log_message('error', "DEBUG - Risposta stdout: " . json_encode($stdoutResponse));
                 
                 // Debug stdout
                 if (!is_string($stdoutResponse) && !isset($stdoutResponse['body'])) {
@@ -209,21 +197,17 @@ class Container
                 
                 $stdout = $stdoutResponse['body'] ?? $stdoutResponse;
                 $result['output']['stdout'] = is_string($stdout) ? $stdout : '';
-               log_message('error', "DEBUG - Stdout estratto: " . $result['output']['stdout']);
             } catch (\RuntimeException $e) {
                 throw $e; // Rilancia le eccezioni di debug
             } catch (\Exception $e) {
-                log_message('error', "DEBUG - Errore recupero stdout: " . $e->getMessage());
+                // Stdout non disponibile
             }
-        } else {
-            log_message('error', "DEBUG - Nessun output stdout disponibile nei metadata");
         }
 
-        // Recupera stderr se disponibile
+        // Recupera stderr se disponibile - usa il path completo fornito da LXD
         if (isset($metadata['metadata']['output']['2'])) {
             try {
-                $stderrPath = "/{$operationId}/logs/2";
-                log_message('error', "DEBUG - Tentativo di recupero stderr da: {$stderrPath}");
+                $stderrPath = $metadata['metadata']['output']['2'];
                 $stderrResponse = $this->client->request('GET', $stderrPath);
                 
                 // Debug stderr
@@ -236,11 +220,10 @@ class Container
             } catch (\RuntimeException $e) {
                 throw $e; // Rilancia le eccezioni di debug
             } catch (\Exception $e) {
-                log_message('error', "DEBUG - Errore recupero stderr: " . $e->getMessage());
+                // Stderr non disponibile
             }
         }
 
-        log_message('error', "DEBUG - Risultato finale: " . json_encode($result));
         return $result;
     }
 
