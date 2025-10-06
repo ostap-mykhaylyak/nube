@@ -190,17 +190,14 @@ class Container
                 $stdoutPath = $metadata['metadata']['output']['1'];
                 $stdoutResponse = $this->client->request('GET', $stdoutPath);
                 
-                // Debug stdout
-                if (!is_string($stdoutResponse) && !isset($stdoutResponse['body'])) {
-                    throw new \RuntimeException('Struttura risposta stdout non valida. Risposta ricevuta: ' . json_encode($stdoutResponse));
+                // Il body può essere null se l'output è vuoto, oppure può essere una stringa diretta
+                if (is_string($stdoutResponse)) {
+                    $result['output']['stdout'] = $stdoutResponse;
+                } elseif (isset($stdoutResponse['body'])) {
+                    $result['output']['stdout'] = $stdoutResponse['body'] ?? '';
                 }
-                
-                $stdout = $stdoutResponse['body'] ?? $stdoutResponse;
-                $result['output']['stdout'] = is_string($stdout) ? $stdout : '';
-            } catch (\RuntimeException $e) {
-                throw $e; // Rilancia le eccezioni di debug
             } catch (\Exception $e) {
-                // Stdout non disponibile
+                // Stdout non disponibile - ignora l'errore
             }
         }
 
@@ -210,17 +207,14 @@ class Container
                 $stderrPath = $metadata['metadata']['output']['2'];
                 $stderrResponse = $this->client->request('GET', $stderrPath);
                 
-                // Debug stderr
-                if (!is_string($stderrResponse) && !isset($stderrResponse['body'])) {
-                    throw new \RuntimeException('Struttura risposta stderr non valida. Risposta ricevuta: ' . json_encode($stderrResponse));
+                // Il body può essere null se l'output è vuoto, oppure può essere una stringa diretta
+                if (is_string($stderrResponse)) {
+                    $result['output']['stderr'] = $stderrResponse;
+                } elseif (isset($stderrResponse['body'])) {
+                    $result['output']['stderr'] = $stderrResponse['body'] ?? '';
                 }
-                
-                $stderr = $stderrResponse['body'] ?? $stderrResponse;
-                $result['output']['stderr'] = is_string($stderr) ? $stderr : '';
-            } catch (\RuntimeException $e) {
-                throw $e; // Rilancia le eccezioni di debug
             } catch (\Exception $e) {
-                // Stderr non disponibile
+                // Stderr non disponibile - ignora l'errore
             }
         }
 
