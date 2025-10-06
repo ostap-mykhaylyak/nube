@@ -39,12 +39,7 @@ class Operation
 
     public function wait(string $id, int $timeout = 300): array
     {
-        $id = ltrim($id, '/');
-        if (!str_starts_with($id, '1.0/operations/')) {
-            $id = '1.0/operations/' . $id;
-        }
-        
-        return $this->client->request('GET', "/{$id}/wait?timeout={$timeout}");
+        return $this->client->request('GET', "/1.0/operations/{$id}/wait?timeout={$timeout}");
     }
 
     public function getLog(string $id, string $logPath): array
