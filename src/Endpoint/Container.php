@@ -165,6 +165,9 @@ class Container
     {
         $response = $this->client->request('GET', "/{$operationId}");
         
+        // Debug completo della risposta
+        error_log("DEBUG getOperationOutput - Risposta completa: " . json_encode($response));
+        
         // Debug
         if (!isset($response['body']) && !isset($response['metadata'])) {
             throw new \RuntimeException('Struttura risposta non valida in getOperationOutput. Risposta ricevuta: ' . json_encode($response));
@@ -175,6 +178,9 @@ class Container
         $metadata = $operation['metadata'] ?? [];
         $status = $metadata['status'] ?? 'Unknown';
         
+        error_log("DEBUG - Status: {$status}");
+        error_log("DEBUG - Metadata completo: " . json_encode($metadata));
+        
         $result = [
             'status' => $status,
             'return_code' => $metadata['metadata']['return'] ?? -1,
@@ -184,11 +190,17 @@ class Container
             ]
         ];
 
+        error_log("DEBUG - Return code: " . $result['return_code']);
+        error_log("DEBUG - Output keys disponibili: " . json_encode(array_keys($metadata['metadata']['output'] ?? [])));
+
         // Recupera stdout se disponibile
         if (isset($metadata['metadata']['output']['1'])) {
             try {
                 $stdoutPath = "/{$operationId}/logs/1";
+                error_log("DEBUG - Tentativo di recupero stdout da: {$stdoutPath}");
                 $stdoutResponse = $this->client->request('GET', $stdoutPath);
+                
+                error_log("DEBUG - Risposta stdout: " . json_encode($stdoutResponse));
                 
                 // Debug stdout
                 if (!is_string($stdoutResponse) && !isset($stdoutResponse['body'])) {
@@ -197,17 +209,21 @@ class Container
                 
                 $stdout = $stdoutResponse['body'] ?? $stdoutResponse;
                 $result['output']['stdout'] = is_string($stdout) ? $stdout : '';
+                error_log("DEBUG - Stdout estratto: " . $result['output']['stdout']);
             } catch (\RuntimeException $e) {
                 throw $e; // Rilancia le eccezioni di debug
             } catch (\Exception $e) {
-                // Stdout non disponibile
+                error_log("DEBUG - Errore recupero stdout: " . $e->getMessage());
             }
+        } else {
+            error_log("DEBUG - Nessun output stdout disponibile nei metadata");
         }
 
         // Recupera stderr se disponibile
         if (isset($metadata['metadata']['output']['2'])) {
             try {
                 $stderrPath = "/{$operationId}/logs/2";
+                error_log("DEBUG - Tentativo di recupero stderr da: {$stderrPath}");
                 $stderrResponse = $this->client->request('GET', $stderrPath);
                 
                 // Debug stderr
@@ -220,10 +236,11 @@ class Container
             } catch (\RuntimeException $e) {
                 throw $e; // Rilancia le eccezioni di debug
             } catch (\Exception $e) {
-                // Stderr non disponibile
+                error_log("DEBUG - Errore recupero stderr: " . $e->getMessage());
             }
         }
 
+        error_log("DEBUG - Risultato finale: " . json_encode($result));
         return $result;
     }
 
