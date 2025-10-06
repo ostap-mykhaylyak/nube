@@ -62,7 +62,7 @@ class Container
         $response = $this->client->request('POST', "/1.0/containers/{$name}/exec", $execData);
         
         if (!isset($response['body']) && !isset($response['operation']) && !isset($response['metadata'])) {
-            throw new \RuntimeException('Struttura risposta exec non valida. Risposta ricevuta: ' . json_encode($response));
+            throw new \RuntimeException(json_encode($response, true));
         }
 
         return $response;
