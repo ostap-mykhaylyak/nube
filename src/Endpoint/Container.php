@@ -70,7 +70,7 @@ class Container
 
     public function log(string $name, string $id, $output = 'stdout'): array
     {
-        return $this->client->raw()->request('GET', "/1.0/instances/{$name}/logs/exec-output/{$id}.{$output}");
+        return $this->client->raw()->request('GET', "/1.0/instances/{$name}/logs/exec-output/exec_{$id}.{$output}");
     }
 
     public function start(string $name, int $timeout = 30): array
