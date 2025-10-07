@@ -68,9 +68,9 @@ class Container
         return $response;
     }
 
-    public function log(string $name, string $id): array
+    public function log(string $name, string $id, $output = 'stdout'): array
     {
-        return $this->client->raw()->request('GET', "/1.0/instances/{$name}/logs/exec-output/{$id}");
+        return $this->client->raw()->request('GET', "/1.0/instances/{$name}/logs/exec-output/{$id}.{$output}");
     }
 
     public function start(string $name, int $timeout = 30): array
