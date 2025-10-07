@@ -41,9 +41,4 @@ class Operation
     {
         return $this->client->request('GET', "/1.0/operations/{$id}/wait?timeout={$timeout}");
     }
-
-    public function getLog(string $id, string $logPath): array
-    {
-        return $this->client->request('GET', $logPath);
-    }
 }
